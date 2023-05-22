@@ -13,8 +13,8 @@ const NumberOfPizzas = 10
 var pizzasMade, pizzasFailed, totalPizzas int
 
 type Producer struct {
-	data chan PizzaOrder
-	quit chan chan error
+	data chan PizzaOrder // channel to transmit pizza order
+	quit chan chan error // channel to STOP production, out of band communication
 }
 
 type PizzaOrder struct {
@@ -25,12 +25,15 @@ type PizzaOrder struct {
 
 func (p *Producer) Close() error {
 	ch := make(chan error)
-	p.quit <- ch
+	p.quit <- ch // quit channel is now ready to send data
 	return <-ch
 
 }
 
 func makePizza(pizzaNumber int) *PizzaOrder {
+	// does not interact with other functions
+	// all variables are internal
+
 	pizzaNumber++
 	if pizzaNumber <= NumberOfPizzas {
 		delay := rand.Intn(3) + 1 // delay execution
@@ -47,7 +50,7 @@ func makePizza(pizzaNumber int) *PizzaOrder {
 		}
 		totalPizzas++
 
-		fmt.Printf("Making pizza number %d. It will take %d seconds.\n", pizzaNumber, delay)
+		fmt.Printf("Making  pizza number %d. It will take %d seconds.\n", pizzaNumber, delay)
 		// delay for a bit
 		time.Sleep(time.Duration(delay) * time.Second)
 
@@ -75,13 +78,9 @@ func makePizza(pizzaNumber int) *PizzaOrder {
 }
 
 func pizzeria(pizzaMaker *Producer) {
-	// keep track of which pizza we are trying to make
-	var i = 0
+	var i = 0 // keep track of which pizza we are trying to make
 
-	// run forever or until we receive a quit notification (from quit chan)
-
-	// try to make pizzas
-
+	// run forever until we receive a quit notification (from quit chan)
 	for {
 		currentPizza := makePizza(i)
 		if currentPizza != nil {
@@ -93,6 +92,9 @@ func pizzeria(pizzaMaker *Producer) {
 			// It chooses one at random if multiple are ready.
 
 			case pizzaMaker.data <- *currentPizza:
+				// feeds data to pizzaMaker.data channel
+				// unless pizzaMaker.quit is ready to communicate
+				// a quit response
 
 			case quitChan := <-pizzaMaker.quit:
 				// unless quit channel is ready to communicate a quit response, select
@@ -110,23 +112,27 @@ func pizzeria(pizzaMaker *Producer) {
 }
 func main() {
 	// seed random number generator
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// print a message saying program is starting
 	color.Cyan("The pizzeria is open for business.")
 	color.Cyan("----------------------------------")
 
 	// create a producer
-	pizzaJob := &Producer{
+	pizzaMaker := &Producer{
 		data: make(chan PizzaOrder),
 		quit: make(chan chan error),
 	}
 
 	// run the producer in the background (go routine)
-	go pizzeria(pizzaJob)
+	go pizzeria(pizzaMaker)
 
-	// create and run a consumer
-	for order := range pizzaJob.data {
+	// create and run a consumer that listens to information
+	// coming **into** the pizzMaker.data channel
+	// order.pizzaNumber is controlled by variable in line 81
+
+	for order := range pizzaMaker.data {
+		//
 		if order.pizzaNumber <= NumberOfPizzas {
 			if order.success {
 				color.Green(order.message)
@@ -137,7 +143,7 @@ func main() {
 			}
 		} else {
 			color.Cyan("Done making pizzas.")
-			err := pizzaJob.Close()
+			err := pizzaMaker.Close()
 			if err != nil {
 				color.Red("Error closing channel.")
 			}
