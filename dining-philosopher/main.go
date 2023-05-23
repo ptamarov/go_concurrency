@@ -25,11 +25,11 @@ var philosophers = []Philosopher{
 // define some variables.
 
 var hunger = 3 // how many times does a person eat?
-var eatTime = 1 * time.Second
+var eatTime = 2 * time.Second
 var thinkTime = 1 * time.Second
 
 // *** for challenge
-var outQueue = []string{}
+var orderFinished []string
 var orderOut sync.Mutex
 
 func main() {
@@ -77,7 +77,7 @@ func dine() {
 
 	mealwg.Wait()
 
-	fmt.Println(outQueue)
+	fmt.Println(orderFinished)
 }
 
 type diningInput struct {
@@ -89,7 +89,7 @@ type diningInput struct {
 
 func recordExit(p Philosopher, exit *sync.Mutex) {
 	exit.Lock()
-	outQueue = append(outQueue, p.name)
+	orderFinished = append(orderFinished, p.name)
 	exit.Unlock()
 }
 
