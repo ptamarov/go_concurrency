@@ -7,14 +7,14 @@ import (
 
 func server1(ch chan string) {
 	for {
-		time.Sleep(6 * time.Second)
+		time.Sleep(2 * time.Second)
 		ch <- "This is from Server 1."
 	}
 }
 
 func server2(ch chan string) {
 	for {
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 		ch <- "This is from Server 2."
 	}
 }
@@ -29,6 +29,10 @@ func main() {
 	go server1(channel1)
 	go server2(channel2)
 
+	// the point of the case list below is that
+	// select chooses cases at random from the list
+	// of cases that are ready!
+
 	for {
 		select {
 		case s1 := <-channel1:
@@ -39,7 +43,6 @@ func main() {
 			fmt.Println("Case three:", s3)
 		case s4 := <-channel2:
 			fmt.Println("Case three:", s4)
-
 		}
 	}
 

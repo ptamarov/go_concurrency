@@ -9,8 +9,8 @@ func shout(ping <-chan string, pong chan<- string) {
 	// receive only channel: <-chan
 	// send only channel: chan<-
 	for {
-		s := <-ping
-		pong <- fmt.Sprintf("%s!!!", strings.ToUpper(s))
+		s := <-ping                                      // receives from ping
+		pong <- fmt.Sprintf("%s!!!", strings.ToUpper(s)) // sends to pong
 	}
 }
 
