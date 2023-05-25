@@ -2,9 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/alexedwards/scs/redisstore"
@@ -17,23 +19,51 @@ import (
 
 const webPort = "80"
 
+func (app *Config) serve() {
+	// start http server
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%s", webPort),
+		Handler: app.routes(),
+	}
+
+	app.InfoLog.Println("Starting web server...")
+
+	err := srv.ListenAndServe()
+
+	if err != nil {
+		log.Panic(err)
+	}
+}
 func main() {
 	// connect to a database
 	db := initDB()
-	db.Ping()
+
+	// create loggers
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stdout, "EROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	// log.Lshortfile is a flag that records a message coming from a file, and the name of the file in short form
 
 	// create sessions
 	session := initSession()
-	// create channels
 
+	// create channels
+	// later
 	// create a waitgroup
+	wg := sync.WaitGroup{}
 
 	// set the application config
+	app := Config{
+		Session:  session,
+		DB:       db,
+		Wait:     &wg,
+		InfoLog:  infoLog,
+		ErrorLog: errorLog,
+	}
 
 	// set up mail
 
 	// listen to web connection
-
+	app.serve()
 }
 
 func initDB() *sql.DB {
