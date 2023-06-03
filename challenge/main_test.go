@@ -34,7 +34,7 @@ func Test_printMessage(t *testing.T) {
 	os.Stdout = stdout // roll back to usual Stdout
 
 	if !strings.Contains(output, "Testing") {
-		t.Errorf("Epected to find \"Testing\" but it was not there.")
+		t.Errorf("Expected to find \"Testing\" but it was not there.")
 	}
 }
 
