@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/alexedwards/scs/redisstore"
@@ -40,7 +42,7 @@ func main() {
 
 	// create loggers
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stdout, "EROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 	// log.Lshortfile is a flag that records a message coming from a file, and the name of the file in short form
 
 	// create sessions
@@ -61,6 +63,9 @@ func main() {
 	}
 
 	// set up mail
+
+	// listen for signals SIGTERM and SIGINT
+	go app.ListenForShutdown()
 
 	// listen to web connection
 	app.serve()
@@ -146,4 +151,26 @@ func initRedis() *redis.Pool {
 	}
 
 	return redisPool
+}
+
+// Run in the background and listen for a shutdown
+func (app *Config) ListenForShutdown() {
+	quit := make(chan os.Signal, 1)
+
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// When you get the interrupt or terminate signal
+
+	<-quit
+	app.shutdown()
+	os.Exit(0)
+}
+
+func (app *Config) shutdown() {
+	// Perform any clean-up tasks
+	app.InfoLog.Println("Would run clean up tasks...")
+
+	// block until waitgroup is empty
+	app.Wait.Wait()
+
+	app.InfoLog.Print("Closing channels and shutting down application...")
 }
