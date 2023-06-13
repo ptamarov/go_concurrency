@@ -94,7 +94,7 @@ func (u *User) GetByEmail(email string) (*User, error) {
 			    created_at, 
 			    updated_at 
 			FROM 
-			    users 
+				users 
 			WHERE 
 			    email = $1`
 
