@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/ptamarov/go_basics/concurrency/final-project/data"
+	"github.com/ptamarov/go_concurrency/final-project/data"
 )
 
 // type to share the application configuration

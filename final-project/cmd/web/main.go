@@ -18,7 +18,7 @@ import (
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v4"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/ptamarov/go_basics/concurrency/final-project/data"
+	"github.com/ptamarov/go_concurrency/final-project/data"
 )
 
 const webPort = "80"
